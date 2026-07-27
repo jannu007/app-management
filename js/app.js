@@ -9,6 +9,14 @@ const STATUS_LABELS = {
   archived: "アーカイブ",
 };
 
+const STATUS_COLOR_VARS = {
+  unclassified: "--status-unclassified",
+  in_progress: "--status-in_progress",
+  completed: "--status-completed",
+  paused: "--status-paused",
+  archived: "--status-archived",
+};
+
 let apps = loadApps();
 let settings = loadSettings();
 let state = { status: "all", search: "", sort: "updated_desc" };
@@ -121,14 +129,19 @@ function render() {
     return;
   }
 
-  for (const app of list) {
-    grid.appendChild(buildCard(app));
-  }
+  list.forEach((app, index) => {
+    grid.appendChild(buildCard(app, index));
+  });
 }
 
-function buildCard(app) {
+function buildCard(app, index) {
   const card = document.createElement("div");
   card.className = "app-card";
+  card.style.setProperty("--i", index);
+  card.style.setProperty(
+    "--card-accent",
+    `var(${STATUS_COLOR_VARS[app.status] || "--accent"})`
+  );
   card.addEventListener("click", () => openEditModal(app.id));
 
   const head = document.createElement("div");
@@ -470,6 +483,22 @@ installBtn.addEventListener("click", async () => {
 window.addEventListener("appinstalled", () => {
   installBtn.classList.add("hidden");
   showToast("インストールしました");
+});
+
+// ---------- ink ripple effect ----------
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".btn");
+  if (!btn) return;
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  const ripple = document.createElement("span");
+  ripple.className = "ripple";
+  ripple.style.width = ripple.style.height = `${size}px`;
+  ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+  ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+  btn.appendChild(ripple);
+  ripple.addEventListener("animationend", () => ripple.remove());
 });
 
 render();
