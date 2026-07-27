@@ -4,12 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claude Code App Manager</title>
+<meta name="theme-color" content="#6d5ef8">
+<meta name="description" content="Claude Codeで作ったアプリ(作成中も含む)をまとめて確認できるダッシュボード">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="App Manager">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <header class="topbar">
   <h1>🗂️ Claude Code App Manager</h1>
   <div class="topbar-actions">
+    <button id="btn-install" class="btn btn-primary hidden">📲 インストール</button>
     <button id="btn-sync" class="btn btn-primary">GitHubと同期</button>
     <button id="btn-add" class="btn">＋ 手動で追加</button>
     <button id="btn-settings" class="btn btn-ghost">設定</button>
