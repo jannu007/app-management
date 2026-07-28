@@ -388,7 +388,7 @@ function htmlFileToPreviewUrl(app, filePath) {
 }
 
 function htmlFileLabel(filePath) {
-  if (/^index\.html?$/i.test(filePath)) return "トップページ (index.html)";
+  if (/^index\.html?$/i.test(filePath)) return "トップページ";
   if (/\/index\.html?$/i.test(filePath)) return filePath.replace(/index\.html?$/i, "");
   return filePath;
 }
