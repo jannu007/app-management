@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claude Code App Manager</title>
 <meta name="theme-color" content="#3c4f76">
-<meta name="description" content="Claude Codeで作ったアプリ(作成中も含む)をまとめて確認できるダッシュボード">
+<meta name="description" content="A dashboard to keep track of every app you've built with Claude Code, including works in progress">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -29,10 +29,10 @@
 <div id="lock-overlay" class="lock-overlay">
   <form id="lock-form" class="lock-card">
     <div class="lock-icon">🔒</div>
-    <h1>合言葉を入力してください</h1>
-    <input id="lock-input" type="password" autocomplete="off" placeholder="合言葉" required autofocus>
-    <p id="lock-error" class="lock-error hidden">合言葉が違います</p>
-    <button type="submit" class="btn btn-primary">開く</button>
+    <h1>Enter passphrase</h1>
+    <input id="lock-input" type="password" autocomplete="off" placeholder="Passphrase" required autofocus>
+    <p id="lock-error" class="lock-error hidden">Incorrect passphrase</p>
+    <button type="submit" class="btn btn-primary">Unlock</button>
   </form>
 </div>
 
@@ -61,37 +61,37 @@
     <svg class="brush-underline" viewBox="0 0 260 14" preserveAspectRatio="none" aria-hidden="true">
       <path d="M4 8 C 40 2, 90 12, 130 6 S 220 2, 256 8" />
     </svg>
-    <p class="tagline">作品帳 ― つくったアプリを、ひとまとめに。</p>
+    <p class="tagline">A record of every app you've made, all in one place.</p>
   </div>
   <div class="topbar-actions">
-    <button id="btn-sync" class="btn btn-primary">GitHubと同期</button>
-    <button id="btn-add" class="btn">＋ 手動で追加</button>
-    <button id="btn-settings" class="btn btn-ghost">設定</button>
+    <button id="btn-sync" class="btn btn-primary">Sync with GitHub</button>
+    <button id="btn-add" class="btn">+ Add manually</button>
+    <button id="btn-settings" class="btn btn-ghost">Settings</button>
   </div>
 </header>
 
 <main>
   <div class="toolbar">
-    <input id="search" type="search" placeholder="名前・説明・タグで検索…" />
+    <input id="search" type="search" placeholder="Search by name, description, tags…" />
     <div class="tabs" id="status-tabs">
       <span class="tab-indicator" id="tab-indicator" aria-hidden="true"></span>
-      <button class="tab active" data-status="all">すべて</button>
-      <button class="tab" data-status="unclassified">未分類</button>
-      <button class="tab" data-status="in_progress">開発中</button>
-      <button class="tab" data-status="completed">完成</button>
-      <button class="tab" data-status="paused">一時停止</button>
-      <button class="tab" data-status="archived">アーカイブ</button>
+      <button class="tab active" data-status="all">All</button>
+      <button class="tab" data-status="unclassified">Unclassified</button>
+      <button class="tab" data-status="in_progress">In Progress</button>
+      <button class="tab" data-status="completed">Completed</button>
+      <button class="tab" data-status="paused">Paused</button>
+      <button class="tab" data-status="archived">Archived</button>
     </div>
     <select id="sort">
-      <option value="updated_desc">更新日が新しい順</option>
-      <option value="updated_asc">更新日が古い順</option>
-      <option value="name_asc">名前順</option>
+      <option value="updated_desc">Newest updated</option>
+      <option value="updated_asc">Oldest updated</option>
+      <option value="name_asc">Name</option>
     </select>
   </div>
 
   <p id="empty-state" class="empty-state hidden">
-    まだ登録されたアプリがありません。<br>
-    「設定」からGitHubアカウントを連携して同期するか、「＋ 手動で追加」から登録してください。
+    No apps registered yet.<br>
+    Connect your GitHub account from "Settings" to sync, or add one manually with "+ Add manually".
   </p>
 
   <div id="app-grid" class="app-grid"></div>
@@ -100,46 +100,46 @@
 <!-- Edit / Add modal -->
 <dialog id="edit-modal">
   <form id="edit-form" method="dialog">
-    <h2 id="edit-modal-title">アプリを追加</h2>
+    <h2 id="edit-modal-title">Add App</h2>
     <input type="hidden" id="f-id">
     <input type="hidden" id="f-source">
     <input type="hidden" id="f-repo-full-name">
 
-    <label>名前
+    <label>Name
       <input id="f-name" type="text" required>
     </label>
 
-    <label>説明
+    <label>Description
       <textarea id="f-description" rows="2"></textarea>
     </label>
 
-    <label>ステータス
+    <label>Status
       <select id="f-status">
-        <option value="unclassified">未分類</option>
-        <option value="in_progress">開発中</option>
-        <option value="completed">完成</option>
-        <option value="paused">一時停止</option>
-        <option value="archived">アーカイブ</option>
+        <option value="unclassified">Unclassified</option>
+        <option value="in_progress">In Progress</option>
+        <option value="completed">Completed</option>
+        <option value="paused">Paused</option>
+        <option value="archived">Archived</option>
       </select>
     </label>
 
-    <label>URL（リポジトリ / 公開先など）
+    <label>URL (repository / deployed app, etc.)
       <input id="f-url" type="url" placeholder="https://...">
     </label>
 
-    <label>タグ（カンマ区切り）
+    <label>Tags (comma-separated)
       <input id="f-tags" type="text" placeholder="claude-code, web, cli">
     </label>
 
-    <label>メモ
-      <textarea id="f-notes" rows="3" placeholder="次にやること、気づいたことなど"></textarea>
+    <label>Notes
+      <textarea id="f-notes" rows="3" placeholder="Next steps, things to remember, etc."></textarea>
     </label>
 
     <div class="modal-actions">
-      <button type="button" id="btn-delete" class="btn btn-danger hidden">削除</button>
+      <button type="button" id="btn-delete" class="btn btn-danger hidden">Delete</button>
       <span class="spacer"></span>
-      <button type="button" id="btn-cancel" class="btn btn-ghost">キャンセル</button>
-      <button type="submit" id="btn-save" class="btn btn-primary">保存</button>
+      <button type="button" id="btn-cancel" class="btn btn-ghost">Cancel</button>
+      <button type="submit" id="btn-save" class="btn btn-primary">Save</button>
     </div>
   </form>
 </dialog>
@@ -147,44 +147,44 @@
 <!-- Settings modal -->
 <dialog id="settings-modal">
   <form id="settings-form" method="dialog">
-    <h2>GitHub連携設定</h2>
+    <h2>GitHub Sync Settings</h2>
     <p class="hint">
-      GitHubアカウントのリポジトリを自動取得できます。トークンはこのブラウザの localStorage にのみ保存され、
-      GitHub API への直接通信にのみ使用されます（サーバーには送信されません）。
-      Private リポジトリも同期したい場合は <code>repo</code> 権限（できれば読み取り専用の fine-grained PAT）のトークンを入力してください。
+      Connect your GitHub account to automatically fetch your repositories. The token is stored only in this
+      browser's localStorage and is used only to talk to the GitHub API directly (never sent to any server).
+      To also sync private repos, enter a token with <code>repo</code> access (a read-only fine-grained PAT is recommended).
     </p>
 
-    <label>GitHubユーザー名
+    <label>GitHub username
       <input id="s-username" type="text" placeholder="octocat">
     </label>
 
-    <label>Personal Access Token（任意・Private repoの取得に必要）
+    <label>Personal Access Token (optional, needed for private repos)
       <input id="s-token" type="password" placeholder="ghp_...">
     </label>
 
     <label class="checkbox-row">
       <input id="s-only-topic" type="checkbox">
-      特定のトピック(タグ)が付いたリポジトリのみ同期する
+      Only sync repositories with a specific topic
     </label>
     <label>
-      トピック名
+      Topic name
       <input id="s-topic-name" type="text" placeholder="claude-code" value="claude-code">
     </label>
 
     <div class="modal-actions">
       <span class="spacer"></span>
-      <button type="button" id="btn-export" class="btn btn-ghost">エクスポート</button>
-      <button type="button" id="btn-import" class="btn btn-ghost">インポート</button>
+      <button type="button" id="btn-export" class="btn btn-ghost">Export</button>
+      <button type="button" id="btn-import" class="btn btn-ghost">Import</button>
       <input type="file" id="import-file" accept="application/json" class="hidden">
-      <button type="button" id="btn-settings-cancel" class="btn btn-ghost">閉じる</button>
-      <button type="submit" class="btn btn-primary">保存</button>
+      <button type="button" id="btn-settings-cancel" class="btn btn-ghost">Close</button>
+      <button type="submit" class="btn btn-primary">Save</button>
     </div>
   </form>
 </dialog>
 
 <div id="toast" class="toast hidden"></div>
 
-<button id="btn-install" class="btn btn-primary install-fab hidden">📲 インストール</button>
+<button id="btn-install" class="btn btn-primary install-fab hidden">📲 Install</button>
 
 </div>
 
