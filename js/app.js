@@ -466,7 +466,8 @@ function moveTabIndicator(tab) {
   const indicator = document.getElementById("tab-indicator");
   if (!tab || !indicator) return;
   indicator.style.width = `${tab.offsetWidth}px`;
-  indicator.style.transform = `translateX(${tab.offsetLeft - 4}px)`;
+  indicator.style.height = `${tab.offsetHeight}px`;
+  indicator.style.transform = `translate(${tab.offsetLeft}px, ${tab.offsetTop}px)`;
 }
 
 document.getElementById("status-tabs").addEventListener("click", (e) => {
