@@ -447,6 +447,19 @@ main {
 }
 .app-card-foot a:hover { text-decoration: underline; }
 
+.open-select {
+  color: var(--accent-2);
+  font-weight: 500;
+  font-size: 0.75rem;
+  font-family: var(--font-body);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.open-select:hover { text-decoration: underline; }
+.open-select:focus { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
 .source-github::before { content: "GitHub · "; }
 
 .empty-state {

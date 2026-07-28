@@ -193,19 +193,54 @@ function buildCard(app, index) {
   updated.className = app.source === "github" ? "source-github" : "";
   updated.textContent = relativeTime(app.lastUpdated);
 
-  const link = document.createElement("a");
-  if (app.url) {
-    link.href = app.url;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.textContent = "開く ↗";
-    link.addEventListener("click", (e) => e.stopPropagation());
-  }
-
-  foot.append(updated, link);
+  foot.append(updated, buildOpenLink(app));
 
   card.append(head, desc, tags, foot);
   return card;
+}
+
+function buildOpenLink(app) {
+  const destinations = [];
+  if (app.url) destinations.push({ label: "アプリを開く ↗", value: app.url });
+  if (app.repoUrl && app.repoUrl !== app.url) destinations.push({ label: "GitHubで見る ↗", value: app.repoUrl });
+
+  if (destinations.length === 0) {
+    return document.createTextNode("");
+  }
+
+  if (destinations.length === 1) {
+    const link = document.createElement("a");
+    link.href = destinations[0].value;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = destinations[0].label;
+    link.addEventListener("click", (e) => e.stopPropagation());
+    return link;
+  }
+
+  const select = document.createElement("select");
+  select.className = "open-select";
+  select.title = "開く先を選択";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "開く ▾";
+  select.appendChild(placeholder);
+
+  for (const dest of destinations) {
+    const option = document.createElement("option");
+    option.value = dest.value;
+    option.textContent = dest.label;
+    select.appendChild(option);
+  }
+
+  select.addEventListener("click", (e) => e.stopPropagation());
+  select.addEventListener("change", () => {
+    if (select.value) window.open(select.value, "_blank", "noopener,noreferrer");
+    select.value = "";
+  });
+
+  return select;
 }
 
 // ---------- Edit modal ----------
@@ -466,6 +501,7 @@ async function syncGithub() {
         }
         existing.lastUpdated = repo.pushed_at;
         existing.url = appUrl;
+        existing.repoUrl = repo.html_url;
         updated++;
       } else {
         const description = repo.description || (await fetchReadmeSummary(repo.full_name));
@@ -477,6 +513,7 @@ async function syncGithub() {
           description,
           status: "unclassified",
           url: appUrl,
+          repoUrl: repo.html_url,
           tags: repo.language ? [repo.language] : [],
           notes: "",
           lastUpdated: repo.pushed_at,
