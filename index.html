@@ -18,6 +18,24 @@
 </head>
 <body>
 
+<script>
+  (function () {
+    if (localStorage.getItem("ccam_unlocked_v1") !== "1") {
+      document.documentElement.classList.add("ccam-locked");
+    }
+  })();
+</script>
+
+<div id="lock-overlay" class="lock-overlay">
+  <form id="lock-form" class="lock-card">
+    <div class="lock-icon">🔒</div>
+    <h1>合言葉を入力してください</h1>
+    <input id="lock-input" type="password" autocomplete="off" placeholder="合言葉" required autofocus>
+    <p id="lock-error" class="lock-error hidden">合言葉が違います</p>
+    <button type="submit" class="btn btn-primary">開く</button>
+  </form>
+</div>
+
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <filter id="watercolor-edge" x="-30%" y="-30%" width="160%" height="160%">
     <feTurbulence type="fractalNoise" baseFrequency="0.012 0.018" numOctaves="2" seed="7" result="noise"/>
@@ -34,6 +52,8 @@
 </div>
 
 <div id="petals" class="petals" aria-hidden="true"></div>
+
+<div id="app-content" class="app-content">
 
 <header class="topbar">
   <div class="brand">
@@ -165,6 +185,8 @@
 <div id="toast" class="toast hidden"></div>
 
 <button id="btn-install" class="btn btn-primary install-fab hidden">📲 インストール</button>
+
+</div>
 
 <script src="js/app.js"></script>
 </body>

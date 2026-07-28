@@ -685,3 +685,65 @@ input:focus, textarea:focus, select:focus {
 @media (prefers-reduced-motion: reduce) {
   .install-fab { animation: none; }
 }
+
+/* ---------- lock screen ---------- */
+
+.lock-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+html.ccam-locked .lock-overlay { display: flex; }
+html.ccam-locked .app-content { display: none; }
+
+.lock-card {
+  width: min(360px, 100%);
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px 28px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  animation: fab-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lock-icon { font-size: 2rem; }
+
+.lock-card h1 {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.lock-card input {
+  width: 100%;
+  text-align: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+.lock-card input:focus {
+  outline: none;
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 3px rgba(193, 117, 138, 0.18);
+}
+
+.lock-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+
+.lock-card .btn { width: 100%; }

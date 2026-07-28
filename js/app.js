@@ -17,6 +17,39 @@ const STATUS_COLOR_VARS = {
   archived: "--status-archived",
 };
 
+// ---------- lock screen ----------
+// Casual deterrent only: the hash below ships in this public repo's source,
+// so anyone determined enough to read it can bypass this. It just keeps the
+// app from being immediately usable by someone who stumbles onto the URL.
+
+const LOCK_HASH_HEX = "b3b0fc90c626fd5acc6877b5c9e81550b2ab82e24a5cedb32c24418d249e741e";
+
+async function sha256Hex(text) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+const lockForm = document.getElementById("lock-form");
+if (lockForm) {
+  lockForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const input = document.getElementById("lock-input");
+    const error = document.getElementById("lock-error");
+    const hash = await sha256Hex(input.value);
+    if (hash === LOCK_HASH_HEX) {
+      localStorage.setItem("ccam_unlocked_v1", "1");
+      document.documentElement.classList.remove("ccam-locked");
+      error.classList.add("hidden");
+    } else {
+      error.classList.remove("hidden");
+      input.value = "";
+      input.focus();
+    }
+  });
+}
+
 let apps = loadApps();
 let settings = loadSettings();
 let state = { status: "all", search: "", sort: "updated_desc" };
