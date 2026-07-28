@@ -2,11 +2,11 @@ const STORAGE_APPS = "ccam_apps_v1";
 const STORAGE_SETTINGS = "ccam_settings_v1";
 
 const STATUS_LABELS = {
-  unclassified: "Unclassified",
-  in_progress: "In Progress",
-  completed: "Completed",
-  paused: "Paused",
-  archived: "Archived",
+  unclassified: "未分類",
+  in_progress: "開発中",
+  completed: "完成",
+  paused: "一時停止",
+  archived: "アーカイブ",
 };
 
 const STATUS_COLOR_VARS = {
@@ -90,17 +90,16 @@ function uid() {
 }
 
 function relativeTime(iso) {
-  if (!iso) return "Update date unknown";
+  if (!iso) return "更新日時不明";
   const diffMs = Date.now() - new Date(iso).getTime();
   const day = 86400000;
   const days = Math.floor(diffMs / day);
-  if (days <= 0) return "Today";
-  if (days === 1) return "1 day ago";
-  if (days < 30) return `${days} days ago`;
+  if (days <= 0) return "今日";
+  if (days === 1) return "1日前";
+  if (days < 30) return `${days}日前`;
   const months = Math.floor(days / 30);
-  if (months < 12) return `${months} month${months === 1 ? "" : "s"} ago`;
-  const years = Math.floor(months / 12);
-  return `${years} year${years === 1 ? "" : "s"} ago`;
+  if (months < 12) return `${months}ヶ月前`;
+  return `${Math.floor(months / 12)}年前`;
 }
 
 function showToast(msg) {
@@ -131,7 +130,7 @@ function getFilteredSortedApps() {
       list.sort((a, b) => new Date(a.lastUpdated || 0) - new Date(b.lastUpdated || 0));
       break;
     case "name_asc":
-      list.sort((a, b) => a.name.localeCompare(b.name, "en"));
+      list.sort((a, b) => a.name.localeCompare(b.name, "ja"));
       break;
     default:
       list.sort((a, b) => new Date(b.lastUpdated || 0) - new Date(a.lastUpdated || 0));
@@ -154,7 +153,7 @@ function renderInner() {
     empty.classList.remove("hidden");
     empty.textContent = "";
     empty.innerHTML =
-      "No apps registered yet.<br>Connect your GitHub account from \"Settings\" to sync, or add one manually with \"+ Add manually\".";
+      "まだ登録されたアプリがありません。<br>「設定」からGitHubアカウントを連携して同期するか、「＋ 手動で追加」から登録してください。";
     return;
   }
   empty.classList.add("hidden");
@@ -162,7 +161,7 @@ function renderInner() {
   if (list.length === 0) {
     const p = document.createElement("p");
     p.className = "empty-state";
-    p.textContent = "No apps match the current filters.";
+    p.textContent = "条件に一致するアプリがありません。";
     grid.appendChild(p);
     return;
   }
@@ -215,7 +214,7 @@ function buildCard(app, index) {
   const editBtn = document.createElement("button");
   editBtn.type = "button";
   editBtn.className = "card-edit-btn";
-  editBtn.title = "Edit";
+  editBtn.title = "編集";
   editBtn.textContent = "✎";
   editBtn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -231,7 +230,7 @@ function buildCard(app, index) {
 
   const desc = document.createElement("div");
   desc.className = "app-desc";
-  desc.textContent = app.description || "No description";
+  desc.textContent = app.description || "説明なし";
 
   const tags = document.createElement("div");
   tags.className = "app-tags";
@@ -279,7 +278,7 @@ async function loadExpandPanel(app, panel) {
   panel.innerHTML = "";
   const loading = document.createElement("div");
   loading.className = "app-expand-status";
-  loading.textContent = "Loading…";
+  loading.textContent = "読み込み中…";
   panel.appendChild(loading);
 
   const rows = await buildAppRows(app);
@@ -288,7 +287,7 @@ async function loadExpandPanel(app, panel) {
   if (rows.length === 0) {
     const empty = document.createElement("div");
     empty.className = "app-expand-status";
-    empty.textContent = "No openable pages were found";
+    empty.textContent = "開けるページが見つかりませんでした";
     panel.appendChild(empty);
     return;
   }
@@ -317,11 +316,11 @@ async function loadExpandPanel(app, panel) {
 
 async function buildAppRows(app) {
   if (!app.repoFullName) {
-    return app.url ? [{ label: "Open app", url: app.url }] : [];
+    return app.url ? [{ label: "アプリを開く", url: app.url }] : [];
   }
 
   const rows = [];
-  if (app.homepage) rows.push({ label: "Homepage", url: app.homepage });
+  if (app.homepage) rows.push({ label: "ホームページ", url: app.homepage });
 
   const files = await fetchRepoHtmlFiles(app);
   for (const path of files) {
@@ -330,11 +329,11 @@ async function buildAppRows(app) {
     // add the htmlpreview.github.io fallback when Pages isn't confirmed yet.
     rows.push({ label: htmlFileLabel(path), url: htmlFileToPagesUrl(app, path) });
     if (!app.hasPages) {
-      rows.push({ label: `${htmlFileLabel(path)} (preview)`, url: htmlFileToPreviewUrl(app, path) });
+      rows.push({ label: `${htmlFileLabel(path)}（プレビュー）`, url: htmlFileToPreviewUrl(app, path) });
     }
   }
 
-  if (app.repoUrl) rows.push({ label: "View on GitHub", url: app.repoUrl });
+  if (app.repoUrl) rows.push({ label: "GitHubで見る", url: app.repoUrl });
   return rows;
 }
 
@@ -389,7 +388,7 @@ function htmlFileToPreviewUrl(app, filePath) {
 }
 
 function htmlFileLabel(filePath) {
-  if (/^index\.html?$/i.test(filePath)) return "Home page (index.html)";
+  if (/^index\.html?$/i.test(filePath)) return "トップページ (index.html)";
   if (/\/index\.html?$/i.test(filePath)) return filePath.replace(/index\.html?$/i, "");
   return filePath;
 }
@@ -403,7 +402,7 @@ const editForm = document.getElementById("edit-form");
 function openEditModal(id) {
   const app = id ? apps.find((a) => a.id === id) : null;
 
-  document.getElementById("edit-modal-title").textContent = app ? "Edit App" : "Add App";
+  document.getElementById("edit-modal-title").textContent = app ? "アプリを編集" : "アプリを追加";
   document.getElementById("f-id").value = app ? app.id : "";
   document.getElementById("f-source").value = app ? app.source : "manual";
   document.getElementById("f-repo-full-name").value = app ? app.repoFullName || "" : "";
@@ -457,7 +456,7 @@ document.getElementById("btn-cancel").addEventListener("click", () => editModal.
 document.getElementById("btn-delete").addEventListener("click", () => {
   const id = document.getElementById("f-id").value;
   if (!id) return;
-  if (confirm("Delete this app? (If it's synced from GitHub, it will be re-added on the next sync.)")) {
+  if (confirm("このアプリの登録を削除しますか？（GitHub同期対象の場合、次回同期で再登録されます）")) {
     apps = apps.filter((a) => a.id !== id);
     saveApps();
     render();
@@ -489,7 +488,7 @@ document.getElementById("settings-form").addEventListener("submit", () => {
     topicName: document.getElementById("s-topic-name").value.trim() || "claude-code",
   };
   saveSettings();
-  showToast("Settings saved");
+  showToast("設定を保存しました");
 });
 
 document.getElementById("btn-export").addEventListener("click", () => {
@@ -522,9 +521,9 @@ document.getElementById("import-file").addEventListener("change", async (e) => {
     }
     saveApps();
     render();
-    showToast(`Imported ${added} app${added === 1 ? "" : "s"}`);
+    showToast(`${added}件のアプリをインポートしました`);
   } catch (err) {
-    showToast("Import failed: please check the file format");
+    showToast("インポートに失敗しました：ファイル形式を確認してください");
   } finally {
     e.target.value = "";
   }
@@ -598,7 +597,7 @@ async function fetchAllRepos() {
     const res = await fetch(url, { headers });
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      throw new Error(`GitHub API error (${res.status}): ${body.slice(0, 200)}`);
+      throw new Error(`GitHub API エラー (${res.status}): ${body.slice(0, 200)}`);
     }
     const page = await res.json();
     results.push(...page);
@@ -610,14 +609,14 @@ async function fetchAllRepos() {
 
 async function syncGithub() {
   if (!settings.username && !settings.token) {
-    showToast("Please enter a GitHub username or token in \"Settings\" first");
+    showToast("先に「設定」でGitHubユーザー名またはトークンを入力してください");
     settingsModal.showModal();
     return;
   }
 
   const btn = document.getElementById("btn-sync");
   btn.disabled = true;
-  btn.textContent = "Syncing…";
+  btn.textContent = "同期中…";
 
   try {
     let repos = await fetchAllRepos();
@@ -683,13 +682,13 @@ async function syncGithub() {
 
     saveApps();
     render();
-    showToast(`Sync complete: ${added} added / ${updated} updated`);
+    showToast(`同期完了：新規 ${added}件 / 更新 ${updated}件`);
     settingsModal.close();
   } catch (err) {
-    showToast(err.message || "Sync failed");
+    showToast(err.message || "同期に失敗しました");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Sync with GitHub";
+    btn.textContent = "GitHubと同期";
   }
 }
 
@@ -787,7 +786,7 @@ installBtn.addEventListener("click", async () => {
 
 window.addEventListener("appinstalled", () => {
   installBtn.classList.add("hidden");
-  showToast("Installed");
+  showToast("インストールしました");
 });
 
 // ---------- ink ripple effect ----------

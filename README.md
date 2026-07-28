@@ -1,73 +1,73 @@
 # Claude Code App Manager
 
-A browser-only dashboard for keeping track of every app you've built with Claude Code, including works in progress, all in one place. No server, no build step required. The theme is inspired by Japanese watercolor painting (indigo, sakura, matcha, and gold washes on a paper-textured background, hanko-stamp-style status badges, and brush-stroke decorative animations).
+Claude Codeで作ったアプリ（作成中のものも含む）を一箇所にまとめて確認するための、ブラウザだけで動くダッシュボードです。サーバーもビルドも不要です。和風水彩画をイメージしたテーマ（藍・桜・抹茶・金の滲む水彩背景、印章風のステータス表示、筆で描くような装飾アニメーション）を採用しています。
 
-🔗 Live URL: https://jannu007.github.io/app-management/ (auto-deploys on every push to `main`. It's hosted on GitHub Pages, so it's completely free.)
+🔗 公開URL: https://jannu007.github.io/app-management/（`main` ブランチへのpushで自動デプロイされます。GitHub Pagesなので完全無料です）
 
-## Features
+## できること
 
-- Connect your GitHub account to automatically list your repositories
-- Manually set a status for each repository — "Unclassified / In Progress / Completed / Paused / Archived"
-- Register apps that aren't on GitHub via "+ Add manually"
-- Search by name/description/tags, filter by status, sort by update date or name
-- Freely add tags and notes to organize each app
-- Data is stored in the browser's `localStorage` (can be exported/imported as JSON for backup or moving to another browser)
-- PWA support — install it on your phone or PC and launch it from your home screen/desktop
-- A lightweight lock screen. You must enter a passphrase to see the contents (⚠️ this is a static site, so it's not real authentication — just a casual deterrent. The passphrase's hash is included in the source code)
+- GitHubアカウントと連携して、自分のリポジトリを自動で一覧取得
+- 取得したリポジトリごとに「未分類 / 開発中 / 完成 / 一時停止 / アーカイブ」のステータスを手動で設定
+- GitHubに上げていないアプリも「＋ 手動で追加」から登録可能
+- 名前・説明・タグでの検索、ステータス別の絞り込み、更新日/名前でのソート
+- タグ・メモを自由に追加してアプリごとに整理
+- データはブラウザの `localStorage` に保存（JSONでエクスポート/インポートしてバックアップ・別ブラウザへの移行も可能）
+- PWA対応。スマホ・PCにアプリとしてインストールして、ホーム画面/デスクトップから起動できます
+- 簡易ロック画面。合言葉を入力しないと中身が見られません（※静的サイトなので本格的なパスワード認証ではなく、軽い目隠し程度のものです。合言葉のハッシュ値はソースコードに含まれます）
 
-## Usage
+## 使い方
 
-Day to day, just bookmark and open the live URL above (https://jannu007.github.io/app-management/).
+普段は上記の公開URL（https://jannu007.github.io/app-management/ ）をブックマークして開くだけでOKです。
 
-If you want to run it locally or modify it, serve it with a simple local server to avoid `file://` restrictions in the browser.
+ローカルで動かしたい・改造したい場合は、ブラウザの `file://` 制限を避けるため簡易サーバーで開いてください。
 
 ```bash
-# from the root of this repository
+# このリポジトリのルートで
 python3 -m http.server 8000
-# or
+# または
 npx serve .
 ```
 
-Then open `http://localhost:8000` in your browser. Pushing to `main` automatically redeploys to Pages via GitHub Actions.
+ブラウザで `http://localhost:8000` を開きます。`main` ブランチにpushすると GitHub Actions が自動でPagesに再デプロイします。
 
-### Syncing with GitHub
+### GitHubと同期する
 
-1. Open "Settings" in the top right
-2. Enter your GitHub username (no token needed if public repos are enough)
-3. If you also want private repos, enter a Personal Access Token with `repo` scope (a read-only fine-grained PAT is recommended)
-4. Check "Only sync repositories with a specific topic" to limit the sync to repos tagged with a GitHub topic (e.g. `claude-code`)
-5. Click "Sync with GitHub" after saving to refresh the list
+1. 右上の「設定」を開く
+2. GitHubのユーザー名を入力（Publicリポジトリのみでよければトークンは不要）
+3. Privateリポジトリも取得したい場合は、`repo` 権限を持つ Personal Access Token（fine-grained PAT推奨、読み取り専用で可）を入力
+4. 「特定のトピックが付いたリポジトリのみ同期する」にチェックを入れると、GitHub上でトピック（例: `claude-code`）を付けたリポジトリだけに絞り込めます
+5. 保存後、「GitHubと同期」を押すと一覧に反映されます
 
-The token is stored only in this browser's localStorage and is never used for anything other than talking to the GitHub API.
+トークンはこのブラウザの localStorage にのみ保存され、GitHub API への通信以外には一切使用されません。
 
-Repositories added by a sync are registered as "Unclassified" — update the status manually to reflect reality (syncing never overwrites existing status, tags, or notes).
+同期後に追加されたリポジトリは「未分類」として登録されるので、実際の状況に応じてステータスを手動で変更してください（同期は既存のステータス・タグ・メモを上書きしません）。
 
-- **Tap a card to expand it**: clicking a card body expands it downward and automatically lists the HTML files in that repository. If GitHub Pages is enabled, each file links to its published Pages URL; otherwise it links to a preview via [htmlpreview.github.io](https://htmlpreview.github.io/). If a `homepage` is set, it's added to the list too, and "View on GitHub" is always available last. Clicking an item opens it in a new tab (click the card again to collapse it). Editing is done via the ✎ button in the top right of the card.
-- **Auto-filled descriptions**: for repositories with no description set on GitHub, the first sentence of the README is automatically extracted and used instead.
+- **カードをタップして展開**: カード本体をクリックすると下に展開し、そのリポジトリ内のHTMLファイル一覧を自動取得して一覧表示します。GitHub Pagesが有効なら各HTMLファイルの公開URLへ、無効な場合は [htmlpreview.github.io](https://htmlpreview.github.io/) 経由でプレビューできるURLへ変換します。`homepage` が設定されていればそれも一覧に加わり、最後に必ず「GitHubで見る」も選べます。項目をクリックすると新しいタブで開きます（再度カードをクリックすると閉じます）。編集は右上の✎ボタンから行います。
+- **説明の自動入力**: GitHub上で説明(description)が設定されていないリポジトリは、READMEの最初の文章を自動で抜き出して説明欄に入れます。
 
-### Registering an app manually
+### 手動でアプリを登録する
 
-Apps that aren't on GitHub, or that only run locally, can be registered via "+ Add manually".
+GitHubに上げていない、あるいはローカルでしか動かしていないアプリは「＋ 手動で追加」から登録できます。
 
-### Backups
+### バックアップ
 
-Use "Export" in "Settings" to save as a JSON file, and "Import" to load one back in (also useful for moving to another browser or device).
+「設定」内の「エクスポート」でJSONファイルとして保存、「インポート」で読み込めます（別ブラウザ・別端末への移行にも使えます）。
 
-### Installing (PWA)
+### インストール（PWA）
 
-Open the live URL in a supported browser (Chrome, Edge, etc.) and a "📲 Install" button appears at the bottom of the screen. Clicking it adds the app to your home screen/desktop/app list so it can launch without a browser tab.
+対応ブラウザ（Chrome、Edgeなど）で公開URLを開くと、右上に「📲 インストール」ボタンが表示されます。押すとアプリとしてホーム画面/デスクトップ/アプリ一覧に追加され、ブラウザのタブなしで起動できるようになります。
 
-- Mobile (Android Chrome / iOS Safari): also available via the browser's share menu or the address bar's "Install" / "Add to Home Screen" option
-- PC (Chrome / Edge): also available via the install icon on the right side of the address bar, or "Install app" in the browser menu
+- スマホ（Android Chrome / iOS Safari）: ブラウザの共有メニューまたはアドレスバーの「インストール」「ホーム画面に追加」からも可能
+- PC（Chrome / Edge）: アドレスバー右側のインストールアイコン、またはメニューの「アプリをインストール」からも可能
 
-## File structure
+## ファイル構成
 
 ```
-index.html              Page structure
-css/style.css           Styles
-js/app.js               Logic (GitHub sync, localStorage management, search/filter, PWA install)
-manifest.webmanifest    PWA manifest
-sw.js                   Service worker (offline caching)
-icons/                  App icons
-.github/workflows/      Automatic deployment to GitHub Pages
+index.html              画面構造
+css/style.css           スタイル
+js/app.js               ロジック（GitHub同期・localStorage管理・検索/絞り込み・PWAインストール）
+manifest.webmanifest    PWAマニフェスト
+sw.js                   Service Worker（オフラインキャッシュ）
+icons/                  アプリアイコン
+.github/workflows/      GitHub Pages自動デプロイ
 ```
