@@ -583,6 +583,33 @@ async function fetchReadmeSummary(fullName) {
   }
 }
 
+// ---------- automatic status classification ----------
+// Only ever applied to repos left as "未分類" (either newly synced, or a
+// user hasn't manually picked a status for yet) — a manually-chosen status
+// is never overwritten by a sync.
+
+async function repoHasRelease(fullName) {
+  try {
+    const headers = { Accept: "application/vnd.github+json" };
+    if (settings.token) headers.Authorization = `Bearer ${settings.token}`;
+    const res = await fetch(`https://api.github.com/repos/${fullName}/releases?per_page=1`, { headers });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return Array.isArray(data) && data.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+async function classifyRepoStatus(repo) {
+  if (repo.archived) return "archived";
+  if (await repoHasRelease(repo.full_name)) return "completed";
+  const daysSincePush = repo.pushed_at
+    ? Math.floor((Date.now() - new Date(repo.pushed_at).getTime()) / 86400000)
+    : Infinity;
+  return daysSincePush <= 30 ? "in_progress" : "paused";
+}
+
 async function fetchAllRepos() {
   const headers = { Accept: "application/vnd.github+json" };
   if (settings.token) headers.Authorization = `Bearer ${settings.token}`;
@@ -649,6 +676,9 @@ async function syncGithub() {
         } else if (!existing.description) {
           existing.description = await fetchReadmeSummary(repo.full_name);
         }
+        if (existing.status === "unclassified") {
+          existing.status = await classifyRepoStatus(repo);
+        }
         existing.lastUpdated = repo.pushed_at;
         existing.url = appUrl;
         existing.repoUrl = repo.html_url;
@@ -664,7 +694,7 @@ async function syncGithub() {
           repoFullName: repo.full_name,
           name: repo.name,
           description,
-          status: "unclassified",
+          status: await classifyRepoStatus(repo),
           url: appUrl,
           repoUrl: repo.html_url,
           homepage: repo.homepage || "",
