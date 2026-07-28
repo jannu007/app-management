@@ -1,4 +1,4 @@
-const CACHE_NAME = "ccam-cache-v2";
+const CACHE_NAME = "ccam-cache-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -35,7 +35,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   event.respondWith(
-    fetch(request)
+    fetch(request.url, { cache: "no-store" })
       .then((res) => {
         const copy = res.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
