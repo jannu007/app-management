@@ -359,9 +359,9 @@ async function fetchRepoHtmlFiles(app) {
         .filter((item) => !/(^|\/)(node_modules|\.git)\//.test(item.path))
         .map((item) => item.path);
       files.sort((a, b) => {
-        const aIsIndex = /(^|\/)index\.html?$/i.test(a) ? 0 : 1;
-        const bIsIndex = /(^|\/)index\.html?$/i.test(b) ? 0 : 1;
-        return aIsIndex !== bIsIndex ? aIsIndex - bIsIndex : a.localeCompare(b);
+        const aIsRootIndex = /^index\.html?$/i.test(a) ? 0 : 1;
+        const bIsRootIndex = /^index\.html?$/i.test(b) ? 0 : 1;
+        return aIsRootIndex !== bIsRootIndex ? aIsRootIndex - bIsRootIndex : a.localeCompare(b);
       });
       return files.slice(0, 40);
     } catch {
