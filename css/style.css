@@ -379,6 +379,48 @@ main {
   gap: 8px;
 }
 
+.app-card-head-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.app-card-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.card-edit-btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.card-edit-btn:hover {
+  color: var(--accent-2);
+  border-color: var(--accent-2);
+  background: var(--bg);
+}
+
+.card-chevron {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  transition: transform 0.25s ease;
+}
+.app-card.expanded .card-chevron { transform: rotate(180deg); }
+
 .app-name {
   font-family: var(--font-heading);
   font-weight: 700;
@@ -447,18 +489,57 @@ main {
 }
 .app-card-foot a:hover { text-decoration: underline; }
 
-.open-select {
-  color: var(--accent-2);
-  font-weight: 500;
-  font-size: 0.75rem;
-  font-family: var(--font-body);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 2px 0;
+.app-expand-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
 }
-.open-select:hover { text-decoration: underline; }
-.open-select:focus { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.app-card.expanded .app-expand-wrap { grid-template-rows: 1fr; }
+
+.app-expand-panel {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.app-expand-status {
+  padding: 10px 2px 2px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.app-expand-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin-top: 8px;
+  font-size: 0.82rem;
+  font-family: var(--font-body);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.app-expand-row:hover {
+  border-color: var(--accent-2);
+  transform: translateX(2px);
+}
+
+.app-expand-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-expand-arrow {
+  color: var(--accent-2);
+  flex-shrink: 0;
+}
 
 .source-github::before { content: "GitHub · "; }
 
