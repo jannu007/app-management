@@ -193,52 +193,125 @@ function buildCard(app, index) {
   updated.className = app.source === "github" ? "source-github" : "";
   updated.textContent = relativeTime(app.lastUpdated);
 
-  foot.append(updated, buildOpenLink(app));
+  foot.append(updated, buildAppSelector(app));
 
   card.append(head, desc, tags, foot);
   return card;
 }
 
-function buildOpenLink(app) {
-  const destinations = [];
-  if (app.url) destinations.push({ label: "アプリを開く ↗", value: app.url });
-  if (app.repoUrl && app.repoUrl !== app.url) destinations.push({ label: "GitHubで見る ↗", value: app.repoUrl });
+// ---------- app picker (browses HTML files inside the repo) ----------
 
-  if (destinations.length === 0) {
-    return document.createTextNode("");
+const htmlFileCache = new Map();
+
+async function fetchRepoHtmlFiles(app) {
+  const cacheKey = app.repoFullName;
+  if (htmlFileCache.has(cacheKey)) return htmlFileCache.get(cacheKey);
+
+  const promise = (async () => {
+    try {
+      const headers = { Accept: "application/vnd.github+json" };
+      if (settings.token) headers.Authorization = `Bearer ${settings.token}`;
+      const branch = app.defaultBranch || "main";
+      const res = await fetch(
+        `https://api.github.com/repos/${app.repoFullName}/git/trees/${encodeURIComponent(branch)}?recursive=1`,
+        { headers }
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      const files = (data.tree || [])
+        .filter((item) => item.type === "blob" && /\.html?$/i.test(item.path))
+        .filter((item) => !/(^|\/)(node_modules|\.git)\//.test(item.path))
+        .map((item) => item.path);
+      files.sort((a, b) => {
+        const aIsIndex = /(^|\/)index\.html?$/i.test(a) ? 0 : 1;
+        const bIsIndex = /(^|\/)index\.html?$/i.test(b) ? 0 : 1;
+        return aIsIndex !== bIsIndex ? aIsIndex - bIsIndex : a.localeCompare(b);
+      });
+      return files.slice(0, 40);
+    } catch {
+      return [];
+    }
+  })();
+
+  htmlFileCache.set(cacheKey, promise);
+  return promise;
+}
+
+function htmlFileToUrl(app, filePath) {
+  if (!app.hasPages) {
+    return `https://htmlpreview.github.io/?https://github.com/${app.repoFullName}/blob/${app.defaultBranch || "main"}/${filePath}`;
   }
+  const [owner, repoName] = app.repoFullName.split("/");
+  let path = filePath;
+  if (/^index\.html?$/i.test(path)) path = "";
+  else if (/\/index\.html?$/i.test(path)) path = path.replace(/index\.html?$/i, "");
+  const isUserSite = repoName.toLowerCase() === `${owner.toLowerCase()}.github.io`;
+  const base = isUserSite ? `https://${owner}.github.io/` : `https://${owner}.github.io/${repoName}/`;
+  return base + path;
+}
 
-  if (destinations.length === 1) {
-    const link = document.createElement("a");
-    link.href = destinations[0].value;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.textContent = destinations[0].label;
-    link.addEventListener("click", (e) => e.stopPropagation());
-    return link;
-  }
+function htmlFileLabel(filePath) {
+  if (/^index\.html?$/i.test(filePath)) return "トップページ (index.html)";
+  if (/\/index\.html?$/i.test(filePath)) return filePath.replace(/index\.html?$/i, "");
+  return filePath;
+}
 
-  const select = document.createElement("select");
-  select.className = "open-select";
-  select.title = "開く先を選択";
-
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = "開く ▾";
-  select.appendChild(placeholder);
-
-  for (const dest of destinations) {
+function renderSelectOptions(select, items) {
+  select.innerHTML = "";
+  for (const item of items) {
     const option = document.createElement("option");
-    option.value = dest.value;
-    option.textContent = dest.label;
+    option.value = item.value;
+    option.textContent = item.label;
+    if (item.disabled) option.disabled = true;
     select.appendChild(option);
   }
+}
 
+function buildAppSelector(app) {
+  const select = document.createElement("select");
+  select.className = "open-select";
+  select.title = "開くページを選択";
   select.addEventListener("click", (e) => e.stopPropagation());
   select.addEventListener("change", () => {
     if (select.value) window.open(select.value, "_blank", "noopener,noreferrer");
     select.value = "";
   });
+
+  if (!app.repoFullName) {
+    if (!app.url) return document.createTextNode("");
+    renderSelectOptions(select, [
+      { value: "", label: "開く ▾" },
+      { value: app.url, label: "開く ↗" },
+    ]);
+    return select;
+  }
+
+  renderSelectOptions(select, [{ value: "", label: "アプリを選択 ▾" }]);
+
+  let loaded = false;
+  const loadOptions = async () => {
+    if (loaded) return;
+    loaded = true;
+    renderSelectOptions(select, [
+      { value: "", label: "アプリを選択 ▾" },
+      { value: "", label: "読み込み中…", disabled: true },
+    ]);
+
+    const files = await fetchRepoHtmlFiles(app);
+    const items = [{ value: "", label: "アプリを選択 ▾" }];
+    if (app.homepage) items.push({ value: app.homepage, label: "ホームページ ↗" });
+    for (const path of files) {
+      items.push({ value: htmlFileToUrl(app, path), label: htmlFileLabel(path) });
+    }
+    if (files.length === 0 && !app.homepage) {
+      items.push({ value: "", label: "HTMLファイルが見つかりませんでした", disabled: true });
+    }
+    if (app.repoUrl) items.push({ value: app.repoUrl, label: "GitHubで見る ↗" });
+    renderSelectOptions(select, items);
+  };
+
+  select.addEventListener("pointerenter", loadOptions);
+  select.addEventListener("focus", loadOptions);
 
   return select;
 }
@@ -502,6 +575,9 @@ async function syncGithub() {
         existing.lastUpdated = repo.pushed_at;
         existing.url = appUrl;
         existing.repoUrl = repo.html_url;
+        existing.homepage = repo.homepage || "";
+        existing.hasPages = !!repo.has_pages;
+        existing.defaultBranch = repo.default_branch || "main";
         updated++;
       } else {
         const description = repo.description || (await fetchReadmeSummary(repo.full_name));
@@ -514,6 +590,9 @@ async function syncGithub() {
           status: "unclassified",
           url: appUrl,
           repoUrl: repo.html_url,
+          homepage: repo.homepage || "",
+          hasPages: !!repo.has_pages,
+          defaultBranch: repo.default_branch || "main",
           tags: repo.language ? [repo.language] : [],
           notes: "",
           lastUpdated: repo.pushed_at,
