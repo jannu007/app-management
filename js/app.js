@@ -322,13 +322,27 @@ async function buildAppRows(app) {
   const rows = [];
 
   const files = await fetchRepoHtmlFiles(app);
-  for (const path of files) {
-    // GitHub's has_pages flag can lag behind an actual Pages deployment, so
-    // always offer the pages.github.io URL as the primary destination; only
-    // add the htmlpreview.github.io fallback when Pages isn't confirmed yet.
-    rows.push({ label: htmlFileLabel(path), url: htmlFileToPagesUrl(app, path) });
-    if (!app.hasPages) {
-      rows.push({ label: `${htmlFileLabel(path)}（プレビュー）`, url: htmlFileToPreviewUrl(app, path) });
+  if (files.length > 0) {
+    for (const path of files) {
+      // GitHub's has_pages flag can lag behind an actual Pages deployment, so
+      // always offer the pages.github.io URL as the primary destination; only
+      // add the htmlpreview.github.io fallback when Pages isn't confirmed yet.
+      rows.push({ label: htmlFileLabel(path), url: htmlFileToPagesUrl(app, path) });
+      if (!app.hasPages) {
+        rows.push({ label: `${htmlFileLabel(path)}（プレビュー）`, url: htmlFileToPreviewUrl(app, path) });
+      }
+    }
+  } else if (app.url && app.url !== app.repoUrl) {
+    // No static HTML files in the repo (e.g. a Next.js app deployed to
+    // Vercel/Netlify) — fall back to the app's Next.js App Router pages,
+    // resolved against its deployed URL.
+    const routes = await fetchRepoNextRoutes(app);
+    if (routes.length > 0) {
+      for (const route of routes) {
+        rows.push({ label: route === "" ? "トップページ" : route, url: joinUrl(app.url, route) });
+      }
+    } else {
+      rows.push({ label: "トップページ", url: app.url });
     }
   }
 
@@ -336,11 +350,16 @@ async function buildAppRows(app) {
   return rows;
 }
 
-const htmlFileCache = new Map();
+function joinUrl(base, route) {
+  const b = base.endsWith("/") ? base : `${base}/`;
+  return route ? b + route : b;
+}
 
-async function fetchRepoHtmlFiles(app) {
+const repoTreeCache = new Map();
+
+async function fetchRepoTree(app) {
   const cacheKey = app.repoFullName;
-  if (htmlFileCache.has(cacheKey)) return htmlFileCache.get(cacheKey);
+  if (repoTreeCache.has(cacheKey)) return repoTreeCache.get(cacheKey);
 
   const promise = (async () => {
     try {
@@ -353,23 +372,42 @@ async function fetchRepoHtmlFiles(app) {
       );
       if (!res.ok) return [];
       const data = await res.json();
-      const files = (data.tree || [])
-        .filter((item) => item.type === "blob" && /\.html?$/i.test(item.path))
+      return (data.tree || [])
+        .filter((item) => item.type === "blob")
         .filter((item) => !/(^|\/)(node_modules|\.git)\//.test(item.path))
         .map((item) => item.path);
-      files.sort((a, b) => {
-        const aIsRootIndex = /^index\.html?$/i.test(a) ? 0 : 1;
-        const bIsRootIndex = /^index\.html?$/i.test(b) ? 0 : 1;
-        return aIsRootIndex !== bIsRootIndex ? aIsRootIndex - bIsRootIndex : a.localeCompare(b);
-      });
-      return files.slice(0, 40);
     } catch {
       return [];
     }
   })();
 
-  htmlFileCache.set(cacheKey, promise);
+  repoTreeCache.set(cacheKey, promise);
   return promise;
+}
+
+async function fetchRepoHtmlFiles(app) {
+  const paths = await fetchRepoTree(app);
+  const files = paths.filter((path) => /\.html?$/i.test(path));
+  files.sort((a, b) => {
+    const aIsRootIndex = /^index\.html?$/i.test(a) ? 0 : 1;
+    const bIsRootIndex = /^index\.html?$/i.test(b) ? 0 : 1;
+    return aIsRootIndex !== bIsRootIndex ? aIsRootIndex - bIsRootIndex : a.localeCompare(b);
+  });
+  return files.slice(0, 40);
+}
+
+async function fetchRepoNextRoutes(app) {
+  const paths = await fetchRepoTree(app);
+  const routes = paths
+    .filter((path) => /^app\/.*page\.(tsx|jsx|js|mdx)$/i.test(path))
+    .filter((path) => !/\[[^\]]+\]/.test(path)) // skip dynamic segments — no concrete URL to link to
+    .map((path) => path.replace(/^app\//, "").replace(/\/?page\.(tsx|jsx|js|mdx)$/i, ""));
+  routes.sort((a, b) => {
+    const aIsRoot = a === "" ? 0 : 1;
+    const bIsRoot = b === "" ? 0 : 1;
+    return aIsRoot !== bIsRoot ? aIsRoot - bIsRoot : a.localeCompare(b);
+  });
+  return routes.slice(0, 40);
 }
 
 function htmlFileToPagesUrl(app, filePath) {
