@@ -320,7 +320,6 @@ async function buildAppRows(app) {
   }
 
   const rows = [];
-  if (app.homepage) rows.push({ label: "ホームページ", url: app.homepage });
 
   const files = await fetchRepoHtmlFiles(app);
   for (const path of files) {
