@@ -439,7 +439,6 @@ main {
   background: color-mix(in srgb, currentColor 12%, transparent);
   white-space: nowrap;
   flex-shrink: 0;
-  transform: rotate(-3deg);
   letter-spacing: 0.03em;
 }
 .badge-unclassified { color: var(--status-unclassified); }

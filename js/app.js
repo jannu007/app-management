@@ -291,7 +291,13 @@ async function buildAppRows(app) {
 
   const files = await fetchRepoHtmlFiles(app);
   for (const path of files) {
-    rows.push({ label: htmlFileLabel(path), url: htmlFileToUrl(app, path) });
+    // GitHub's has_pages flag can lag behind an actual Pages deployment, so
+    // always offer the pages.github.io URL as the primary destination; only
+    // add the htmlpreview.github.io fallback when Pages isn't confirmed yet.
+    rows.push({ label: htmlFileLabel(path), url: htmlFileToPagesUrl(app, path) });
+    if (!app.hasPages) {
+      rows.push({ label: `${htmlFileLabel(path)}（プレビュー）`, url: htmlFileToPreviewUrl(app, path) });
+    }
   }
 
   if (app.repoUrl) rows.push({ label: "GitHubで見る", url: app.repoUrl });
@@ -334,10 +340,7 @@ async function fetchRepoHtmlFiles(app) {
   return promise;
 }
 
-function htmlFileToUrl(app, filePath) {
-  if (!app.hasPages) {
-    return `https://htmlpreview.github.io/?https://github.com/${app.repoFullName}/blob/${app.defaultBranch || "main"}/${filePath}`;
-  }
+function htmlFileToPagesUrl(app, filePath) {
   const [owner, repoName] = app.repoFullName.split("/");
   let path = filePath;
   if (/^index\.html?$/i.test(path)) path = "";
@@ -345,6 +348,10 @@ function htmlFileToUrl(app, filePath) {
   const isUserSite = repoName.toLowerCase() === `${owner.toLowerCase()}.github.io`;
   const base = isUserSite ? `https://${owner}.github.io/` : `https://${owner}.github.io/${repoName}/`;
   return base + path;
+}
+
+function htmlFileToPreviewUrl(app, filePath) {
+  return `https://htmlpreview.github.io/?https://github.com/${app.repoFullName}/blob/${app.defaultBranch || "main"}/${filePath}`;
 }
 
 function htmlFileLabel(filePath) {
