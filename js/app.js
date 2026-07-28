@@ -355,6 +355,49 @@ function parseLinkHeader(header) {
   return links;
 }
 
+function computeAppUrl(repo) {
+  if (repo.homepage && repo.homepage.trim()) return repo.homepage.trim();
+  if (repo.has_pages && repo.owner && repo.owner.login) {
+    const owner = repo.owner.login;
+    const isUserSite = repo.name.toLowerCase() === `${owner.toLowerCase()}.github.io`;
+    return isUserSite ? `https://${owner}.github.io/` : `https://${owner}.github.io/${repo.name}/`;
+  }
+  return repo.html_url;
+}
+
+function summarizeReadme(text) {
+  for (let line of text.split("\n")) {
+    line = line.trim();
+    if (!line) continue;
+    if (line.startsWith("#")) continue;
+    if (line.startsWith("<!--")) continue;
+    if (line.startsWith("<img") || line.startsWith("<p align") || line.startsWith("<div")) continue;
+    if (/^[-=*_]{3,}$/.test(line)) continue;
+    line = line
+      .replace(/\[!\[.*?\]\(.*?\)\]\(.*?\)/g, "")
+      .replace(/!\[.*?\]\(.*?\)/g, "")
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      .replace(/[*_`#]/g, "")
+      .trim();
+    if (line.length > 3) {
+      return line.length > 140 ? `${line.slice(0, 137)}…` : line;
+    }
+  }
+  return "";
+}
+
+async function fetchReadmeSummary(fullName) {
+  try {
+    const headers = { Accept: "application/vnd.github.raw+json" };
+    if (settings.token) headers.Authorization = `Bearer ${settings.token}`;
+    const res = await fetch(`https://api.github.com/repos/${fullName}/readme`, { headers });
+    if (!res.ok) return "";
+    return summarizeReadme(await res.text());
+  } catch {
+    return "";
+  }
+}
+
 async function fetchAllRepos() {
   const headers = { Accept: "application/vnd.github+json" };
   if (settings.token) headers.Authorization = `Bearer ${settings.token}`;
@@ -413,20 +456,27 @@ async function syncGithub() {
 
     for (const repo of repos) {
       const existing = apps.find((a) => a.repoFullName === repo.full_name);
+      const appUrl = computeAppUrl(repo);
+
       if (existing) {
-        existing.description = repo.description || existing.description;
+        if (repo.description) {
+          existing.description = repo.description;
+        } else if (!existing.description) {
+          existing.description = await fetchReadmeSummary(repo.full_name);
+        }
         existing.lastUpdated = repo.pushed_at;
-        existing.url = repo.html_url;
+        existing.url = appUrl;
         updated++;
       } else {
+        const description = repo.description || (await fetchReadmeSummary(repo.full_name));
         apps.push({
           id: uid(),
           source: "github",
           repoFullName: repo.full_name,
           name: repo.name,
-          description: repo.description || "",
+          description,
           status: "unclassified",
-          url: repo.html_url,
+          url: appUrl,
           tags: repo.language ? [repo.language] : [],
           notes: "",
           lastUpdated: repo.pushed_at,
