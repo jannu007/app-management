@@ -1,4 +1,4 @@
-const CACHE_NAME = "ccam-cache-v1";
+const CACHE_NAME = "ccam-cache-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -24,34 +24,25 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// Network-first for same-origin GET requests: always try to fetch the latest
+// version first, and only fall back to the cache when offline. This is a
+// hand-maintained static site with no content-hashed filenames, so a
+// cache-first strategy would silently pin visitors to a stale build forever.
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) {
     return;
   }
 
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          return res;
-        })
-        .catch(() => caches.match(request).then((res) => res || caches.match("./index.html")))
-    );
-    return;
-  }
-
   event.respondWith(
-    caches.match(request).then(
-      (cached) =>
-        cached ||
-        fetch(request).then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          return res;
-        })
-    )
+    fetch(request)
+      .then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        return res;
+      })
+      .catch(() =>
+        caches.match(request).then((res) => res || (request.mode === "navigate" ? caches.match("./index.html") : undefined))
+      )
   );
 });
