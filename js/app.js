@@ -106,6 +106,10 @@ function getFilteredSortedApps() {
 }
 
 function render() {
+  renderInner();
+}
+
+function renderInner() {
   const grid = document.getElementById("app-grid");
   const empty = document.getElementById("empty-state");
   const list = getFilteredSortedApps();
@@ -143,6 +147,18 @@ function buildCard(app, index) {
     `var(${STATUS_COLOR_VARS[app.status] || "--accent"})`
   );
   card.addEventListener("click", () => openEditModal(app.id));
+  card.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "touch") return;
+    const rect = card.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    const rx = (0.5 - py) * 14;
+    const ry = (px - 0.5) * 14;
+    card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px) scale(1.015)`;
+  });
+  card.addEventListener("pointerleave", () => {
+    card.style.transform = "";
+  });
 
   const head = document.createElement("div");
   head.className = "app-card-head";
@@ -446,14 +462,57 @@ document.getElementById("sort").addEventListener("change", (e) => {
   render();
 });
 
+function moveTabIndicator(tab) {
+  const indicator = document.getElementById("tab-indicator");
+  if (!tab || !indicator) return;
+  indicator.style.width = `${tab.offsetWidth}px`;
+  indicator.style.transform = `translateX(${tab.offsetLeft - 4}px)`;
+}
+
 document.getElementById("status-tabs").addEventListener("click", (e) => {
   const btn = e.target.closest(".tab");
   if (!btn) return;
   document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
   btn.classList.add("active");
+  moveTabIndicator(btn);
   state.status = btn.dataset.status;
   render();
 });
+
+window.addEventListener("resize", () => {
+  moveTabIndicator(document.querySelector(".tab.active"));
+});
+window.addEventListener("load", () => {
+  moveTabIndicator(document.querySelector(".tab.active"));
+});
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(() => moveTabIndicator(document.querySelector(".tab.active")));
+}
+
+// ---------- falling petals ----------
+
+function spawnPetal() {
+  const container = document.getElementById("petals");
+  if (!container) return;
+  const petal = document.createElement("div");
+  petal.className = "petal";
+  const startX = Math.random() * 100;
+  const drift = (Math.random() - 0.5) * 160;
+  const duration = 9 + Math.random() * 8;
+  const size = 8 + Math.random() * 8;
+  petal.style.left = `${startX}vw`;
+  petal.style.width = petal.style.height = `${size}px`;
+  petal.style.setProperty("--drift", `${drift}px`);
+  petal.style.animationDuration = `${duration}s`;
+  petal.style.background = Math.random() > 0.5 ? "var(--accent-2)" : "var(--blob-gold)";
+  container.appendChild(petal);
+  petal.addEventListener("animationend", () => petal.remove());
+}
+
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  for (let i = 0; i < 3; i++) setTimeout(spawnPetal, i * 1500);
+  setInterval(spawnPetal, 3200);
+}
 
 // ---------- PWA install ----------
 
@@ -502,3 +561,4 @@ document.addEventListener("click", (e) => {
 });
 
 render();
+moveTabIndicator(document.querySelector(".tab.active"));

@@ -30,18 +30,20 @@
   <div class="blob blob-sakura blob-2"></div>
   <div class="blob blob-matcha blob-3"></div>
   <div class="blob blob-gold blob-4"></div>
+  <div class="blob blob-sakura blob-5"></div>
 </div>
+
+<div id="petals" class="petals" aria-hidden="true"></div>
 
 <header class="topbar">
   <div class="brand">
-    <h1>🖌️ Claude Code App Manager</h1>
+    <h1><span class="brand-emoji">🖌️</span> Claude Code App Manager</h1>
     <svg class="brush-underline" viewBox="0 0 260 14" preserveAspectRatio="none" aria-hidden="true">
       <path d="M4 8 C 40 2, 90 12, 130 6 S 220 2, 256 8" />
     </svg>
     <p class="tagline">作品帳 ― つくったアプリを、ひとまとめに。</p>
   </div>
   <div class="topbar-actions">
-    <button id="btn-install" class="btn btn-primary hidden">📲 インストール</button>
     <button id="btn-sync" class="btn btn-primary">GitHubと同期</button>
     <button id="btn-add" class="btn">＋ 手動で追加</button>
     <button id="btn-settings" class="btn btn-ghost">設定</button>
@@ -52,6 +54,7 @@
   <div class="toolbar">
     <input id="search" type="search" placeholder="名前・説明・タグで検索…" />
     <div class="tabs" id="status-tabs">
+      <span class="tab-indicator" id="tab-indicator" aria-hidden="true"></span>
       <button class="tab active" data-status="all">すべて</button>
       <button class="tab" data-status="unclassified">未分類</button>
       <button class="tab" data-status="in_progress">開発中</button>
@@ -160,6 +163,8 @@
 </dialog>
 
 <div id="toast" class="toast hidden"></div>
+
+<button id="btn-install" class="btn btn-primary install-fab hidden">📲 インストール</button>
 
 <script src="js/app.js"></script>
 </body>
