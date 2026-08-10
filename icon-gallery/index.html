@@ -3,22 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Claude Code App Manager</title>
+<title>アイコン一覧 ― Claude Code App Manager</title>
 <meta name="theme-color" content="#3c4f76">
-<meta name="description" content="Claude Codeで作ったアプリ(作成中も含む)をまとめて確認できるダッシュボード">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="App Manager">
+<meta name="description" content="Claude Codeで作ったアプリのアイコンを一覧表示・管理するギャラリー">
+<link rel="icon" href="../icons/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="css/gallery.css">
 </head>
 <body>
 
 <script>
+  window.SW_PATH = "../sw.js";
   (function () {
     if (localStorage.getItem("ccam_unlocked_v1") !== "1") {
       document.documentElement.classList.add("ccam-locked");
@@ -57,16 +55,16 @@
 
 <header class="topbar">
   <div class="brand">
-    <h1><span class="brand-emoji">🖌️</span> Claude Code App Manager</h1>
+    <h1><span class="brand-emoji">🗂️</span> アイコン一覧</h1>
     <svg class="brush-underline" viewBox="0 0 260 14" preserveAspectRatio="none" aria-hidden="true">
       <path d="M4 8 C 40 2, 90 12, 130 6 S 220 2, 256 8" />
     </svg>
-    <p class="tagline">作品帳 ― つくったアプリを、ひとまとめに。</p>
+    <p class="tagline">つくったアプリを、アイコンでひとめに。</p>
   </div>
   <div class="topbar-actions">
     <button id="btn-sync" class="btn btn-primary">GitHubと同期</button>
     <button id="btn-add" class="btn">＋ 手動で追加</button>
-    <a href="icon-gallery/" class="btn btn-ghost">🗂️ アイコン一覧</a>
+    <a href="../" class="btn btn-ghost">🖌️ 一覧表示に戻る</a>
     <button id="btn-settings" class="btn btn-ghost">設定</button>
   </div>
 </header>
@@ -95,7 +93,7 @@
     「設定」からGitHubアカウントを連携して同期するか、「＋ 手動で追加」から登録してください。
   </p>
 
-  <div id="app-grid" class="app-grid"></div>
+  <div id="app-grid" class="app-grid icon-grid"></div>
 </main>
 
 <!-- Edit / Add modal -->
@@ -153,6 +151,7 @@
       GitHubアカウントのリポジトリを自動取得できます。トークンはこのブラウザの localStorage にのみ保存され、
       GitHub API への直接通信にのみ使用されます（サーバーには送信されません）。
       Private リポジトリも同期したい場合は <code>repo</code> 権限（できれば読み取り専用の fine-grained PAT）のトークンを入力してください。
+      設定はメインの一覧表示画面と共有されます。
     </p>
 
     <label>GitHubユーザー名
@@ -185,11 +184,9 @@
 
 <div id="toast" class="toast hidden"></div>
 
-<button id="btn-install" class="btn btn-primary install-fab hidden">📲 インストール</button>
-
 </div>
 
-<script src="js/shared.js"></script>
-<script src="js/app.js"></script>
+<script src="../js/shared.js"></script>
+<script src="js/gallery.js"></script>
 </body>
 </html>

@@ -67,14 +67,27 @@ GitHubに上げていない、あるいはローカルでしか動かしてい�
 - スマホ（Android Chrome / iOS Safari）: ブラウザの共有メニューまたはアドレスバーの「インストール」「ホーム画面に追加」からも可能
 - PC（Chrome / Edge）: アドレスバー右側のインストールアイコン、またはメニューの「アプリをインストール」からも可能
 
+### アイコン一覧（icon-gallery/）
+
+トップバーの「🗂️ アイコン一覧」から、登録したアプリをアイコンのグリッドで一覧表示・管理できる画面に移動できます（公開URL: https://jannu007.github.io/app-management/icon-gallery/）。
+
+- データ（登録アプリ・GitHub連携設定）は一覧表示画面と共有されるので、どちらで同期・追加・編集しても両方に反映されます。
+- 各リポジトリの `icons/` フォルダ内（`icon-512.png` → `icon-192.png` → `icon.png` → `apple-touch-icon.png` → `favicon.svg` → `favicon.ico` の順）から自動でアイコン画像を探します。見つからない場合はアプリ名の頭文字を使った代用アイコンを自動生成します。
+- タイルをクリックするとアプリを新しいタブで開きます。右上の✎ボタンから編集できます。
+
 ## ファイル構成
 
 ```
-index.html              画面構造
-css/style.css           スタイル
-js/app.js               ロジック（GitHub同期・localStorage管理・検索/絞り込み・PWAインストール）
+index.html              画面構造（一覧表示）
+css/style.css           スタイル（テーマ本体）
+js/shared.js            共通ロジック（GitHub同期・localStorage管理・検索/絞り込み・編集/設定モーダルなど）
+js/app.js               一覧表示（カードリスト）固有のロジック
 manifest.webmanifest    PWAマニフェスト
 sw.js                   Service Worker（オフラインキャッシュ）
 icons/                  アプリアイコン
+icon-gallery/            アイコン一覧画面
+  index.html             画面構造
+  css/gallery.css        アイコングリッド用スタイル
+  js/gallery.js          アイコン一覧固有のロジック（アイコン自動検出など）
 .github/workflows/      GitHub Pages自動デプロイ
 ```
