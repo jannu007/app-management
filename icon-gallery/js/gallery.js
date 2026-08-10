@@ -133,6 +133,28 @@ function buildIconTile(app, index) {
 
   tile.append(statusDot, editBtn, imageWrap, name);
 
+  // A repo can bundle more than one independent app (e.g. novel/ has both
+  // "小説執筆スタジオ" at / and "文机" at /desk/). A single tile can only
+  // launch one URL directly, so repos with a repoFullName also get a small
+  // "他のアプリ" picker button to reach the rest — resolved lazily since it
+  // needs a GitHub API call.
+  if (app.repoFullName) {
+    const moreBtn = document.createElement("button");
+    moreBtn.type = "button";
+    moreBtn.className = "icon-tile-more";
+    moreBtn.title = "このリポジトリの他のページ";
+    moreBtn.textContent = "▾";
+    moreBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      showPopover(moreBtn, [{ label: "読み込み中…", loading: true }]);
+      const rows = await buildAppRows(app);
+      if (openPopover && openPopover.anchor === moreBtn) {
+        showPopover(moreBtn, rows.length > 0 ? rows : [{ label: "開けるページが見つかりませんでした", disabled: true }]);
+      }
+    });
+    tile.appendChild(moreBtn);
+  }
+
   tile.addEventListener("click", () => {
     if (app.url) {
       window.open(app.url, "_blank", "noopener,noreferrer");
@@ -142,6 +164,69 @@ function buildIconTile(app, index) {
   });
 
   return tile;
+}
+
+// ---------- "other pages in this repo" popover ----------
+
+let openPopover = null;
+
+function closePopover() {
+  if (!openPopover) return;
+  openPopover.el.remove();
+  openPopover = null;
+  document.removeEventListener("click", onPopoverOutsideClick, true);
+  document.removeEventListener("keydown", onPopoverKeydown, true);
+}
+
+function onPopoverOutsideClick(e) {
+  if (openPopover && !openPopover.el.contains(e.target) && e.target !== openPopover.anchor) {
+    closePopover();
+  }
+}
+
+function onPopoverKeydown(e) {
+  if (e.key === "Escape") closePopover();
+}
+
+function showPopover(anchorEl, rows) {
+  closePopover();
+
+  const pop = document.createElement("div");
+  pop.className = "icon-tile-popover";
+  for (const row of rows) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "icon-tile-popover-row";
+    btn.textContent = row.label;
+    if (row.loading || row.disabled) {
+      btn.disabled = true;
+    } else {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        window.open(row.url, "_blank", "noopener,noreferrer");
+        closePopover();
+      });
+    }
+    pop.appendChild(btn);
+  }
+  document.body.appendChild(pop);
+
+  const rect = anchorEl.getBoundingClientRect();
+  const popRect = pop.getBoundingClientRect();
+  let left = rect.left + rect.width / 2 - popRect.width / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - popRect.width - 8));
+  let top = rect.bottom + 8;
+  if (top + popRect.height > window.innerHeight - 8) {
+    top = rect.top - popRect.height - 8;
+  }
+  pop.style.left = `${left + window.scrollX}px`;
+  pop.style.top = `${top + window.scrollY}px`;
+
+  openPopover = { el: pop, anchor: anchorEl };
+  setTimeout(() => {
+    document.addEventListener("click", onPopoverOutsideClick, true);
+    document.addEventListener("keydown", onPopoverKeydown, true);
+  }, 0);
 }
 
 render();
