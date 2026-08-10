@@ -38,6 +38,13 @@ const ICON_CANDIDATE_PATHS = [
   "icons/favicon.svg",
   "favicon.svg",
   "favicon.ico",
+  // Vite/CRA-style projects (e.g. this app's own novel/Moog repos) keep
+  // their PWA icons directly under public/ instead of a top-level icons/.
+  "public/icon-512.png",
+  "public/icon-192.png",
+  "public/apple-touch-icon.png",
+  "public/favicon.svg",
+  "public/favicon.ico",
 ];
 
 function buildIconCandidates(app) {
